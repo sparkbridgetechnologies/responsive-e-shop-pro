@@ -1,27 +1,24 @@
 
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Twitter, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="bg-white border-t border-gray-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Company Info */}
           <div>
-            <h3 className="text-2xl font-bold text-orange-500 mb-4">GlowSkin</h3>
-            <p className="text-gray-300 mb-6">
+            <h3 className="text-2xl font-light text-gray-900 mb-6">GlowSkin</h3>
+            <p className="text-gray-600 mb-8 font-light">
               Premium skincare products for radiant, healthy skin. Natural ingredients, proven results.
             </p>
             <div className="flex space-x-4">
-              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-orange-500">
-                <Facebook className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-orange-500">
+              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600">
                 <Instagram className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-orange-500">
+              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600">
                 <Twitter className="h-5 w-5" />
               </Button>
             </div>
@@ -29,60 +26,47 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">About Us</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">Shop</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">Contact</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">FAQ</a></li>
-            </ul>
-          </div>
-
-          {/* Customer Service */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">Shipping Info</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">Returns</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">Size Guide</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500">Track Order</a></li>
+            <h4 className="text-lg font-light mb-6 text-gray-900">Quick Links</h4>
+            <ul className="space-y-3">
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 font-light">About Us</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 font-light">Shop</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 font-light">Contact</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 font-light">FAQ</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 font-light">Shipping</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 font-light">Returns</a></li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Stay Updated</h4>
-            <p className="text-gray-300 mb-4">Subscribe to get updates on new products and offers</p>
-            <div className="flex flex-col space-y-3">
+            <h4 className="text-lg font-light mb-6 text-gray-900">Stay Updated</h4>
+            <p className="text-gray-600 mb-6 font-light">Subscribe to get updates on new products and offers</p>
+            <div className="flex flex-col space-y-4">
               <Input 
                 placeholder="Enter your email" 
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+                className="border-gray-200 focus:border-gray-400 rounded-none"
               />
-              <Button className="bg-orange-500 hover:bg-orange-600">
+              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black rounded-none font-light">
                 Subscribe
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Contact Info */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
+        {/* Bottom */}
+        <div className="border-t border-gray-100 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-8 mb-4 md:mb-0">
-              <div className="flex items-center text-gray-300">
+              <div className="flex items-center text-gray-500 font-light">
                 <Mail className="h-4 w-4 mr-2" />
                 support@glowskin.com
               </div>
-              <div className="flex items-center text-gray-300">
+              <div className="flex items-center text-gray-500 font-light">
                 <Phone className="h-4 w-4 mr-2" />
                 +1 (555) 123-4567
               </div>
-              <div className="flex items-center text-gray-300">
-                <MapPin className="h-4 w-4 mr-2" />
-                New York, NY
-              </div>
             </div>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm font-light">
               © 2024 GlowSkin. All rights reserved.
             </p>
           </div>
