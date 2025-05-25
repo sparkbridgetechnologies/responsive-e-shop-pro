@@ -16,15 +16,24 @@ interface CartItem {
   };
 }
 
+interface LocalCartItem {
+  product_id: string;
+  quantity: number;
+  name: string;
+  price: number;
+  image_url: string;
+}
+
 interface CartContextType {
   items: CartItem[];
   loading: boolean;
-  addToCart: (productId: string, quantity?: number) => Promise<void>;
+  addToCart: (productId: string, quantity?: number, productData?: any) => Promise<void>;
   removeFromCart: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   totalAmount: number;
   itemCount: number;
+  syncLocalCartToUser: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,9 +44,54 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Load local storage cart items
+  const getLocalCart = (): LocalCartItem[] => {
+    const localCart = localStorage.getItem('cart');
+    return localCart ? JSON.parse(localCart) : [];
+  };
+
+  const setLocalCart = (items: LocalCartItem[]) => {
+    localStorage.setItem('cart', JSON.stringify(items));
+  };
+
+  const syncLocalCartToUser = async () => {
+    if (!user) return;
+    
+    const localCart = getLocalCart();
+    if (localCart.length === 0) return;
+
+    try {
+      for (const item of localCart) {
+        await supabase
+          .from('cart')
+          .upsert(
+            { user_id: user.id, product_id: item.product_id, quantity: item.quantity },
+            { onConflict: 'user_id,product_id' }
+          );
+      }
+      localStorage.removeItem('cart');
+      await fetchCartItems();
+    } catch (error) {
+      console.error('Error syncing local cart:', error);
+    }
+  };
+
   const fetchCartItems = async () => {
     if (!user) {
-      setItems([]);
+      // Load from local storage if not logged in
+      const localCart = getLocalCart();
+      const formattedItems: CartItem[] = localCart.map((item, index) => ({
+        id: `local-${index}`,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        products: {
+          id: item.product_id,
+          name: item.name,
+          price: item.price,
+          image_url: item.image_url
+        }
+      }));
+      setItems(formattedItems);
       setLoading(false);
       return;
     }
@@ -71,12 +125,36 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     fetchCartItems();
   }, [user]);
 
-  const addToCart = async (productId: string, quantity = 1) => {
+  useEffect(() => {
+    if (user) {
+      syncLocalCartToUser();
+    }
+  }, [user]);
+
+  const addToCart = async (productId: string, quantity = 1, productData?: any) => {
     if (!user) {
+      // Add to local storage
+      const localCart = getLocalCart();
+      const existingItem = localCart.find(item => item.product_id === productId);
+      
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        localCart.push({
+          product_id: productId,
+          quantity,
+          name: productData?.name || 'Product',
+          price: productData?.price || 0,
+          image_url: productData?.image_url || ''
+        });
+      }
+      
+      setLocalCart(localCart);
+      await fetchCartItems();
+      
       toast({
-        title: "Please sign in",
-        description: "You need to be signed in to add items to cart.",
-        variant: "destructive",
+        title: "Added to cart",
+        description: "Item has been added to your cart.",
       });
       return;
     }
@@ -107,7 +185,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const removeFromCart = async (productId: string) => {
-    if (!user) return;
+    if (!user) {
+      const localCart = getLocalCart();
+      const updatedCart = localCart.filter(item => item.product_id !== productId);
+      setLocalCart(updatedCart);
+      await fetchCartItems();
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -124,7 +208,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateQuantity = async (productId: string, quantity: number) => {
-    if (!user) return;
+    if (!user) {
+      const localCart = getLocalCart();
+      const item = localCart.find(item => item.product_id === productId);
+      if (item) {
+        item.quantity = quantity;
+        setLocalCart(localCart);
+        await fetchCartItems();
+      }
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -141,7 +234,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const clearCart = async () => {
-    if (!user) return;
+    if (!user) {
+      localStorage.removeItem('cart');
+      setItems([]);
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -173,6 +270,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       clearCart,
       totalAmount,
       itemCount,
+      syncLocalCartToUser,
     }}>
       {children}
     </CartContext.Provider>

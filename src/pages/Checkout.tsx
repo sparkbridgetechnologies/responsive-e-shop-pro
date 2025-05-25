@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/Header';
 
 declare global {
   interface Window {
@@ -15,7 +16,7 @@ declare global {
 }
 
 const Checkout = () => {
-  const { items, totalAmount, clearCart } = useCart();
+  const { items, totalAmount, clearCart, syncLocalCartToUser } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -29,6 +30,14 @@ const Checkout = () => {
     state: '',
     pincode: '',
   });
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    } else {
+      syncLocalCartToUser();
+    }
+  }, [user, navigate, syncLocalCartToUser]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -108,7 +117,7 @@ const Checkout = () => {
               title: "Payment successful!",
               description: "Your order has been placed successfully.",
             });
-            navigate(`/order-confirmation/${order.id}`);
+            navigate(`/orders`);
           } catch (error) {
             console.error('Error updating payment:', error);
             toast({
@@ -141,29 +150,32 @@ const Checkout = () => {
     }
   };
 
-  const handleGooglePay = async () => {
-    // Implement Google Pay integration
-    toast({
-      title: "Google Pay",
-      description: "Google Pay integration coming soon!",
-    });
-  };
-
-  const handleUPIPayment = async () => {
-    // Implement UPI QR code payment
-    toast({
-      title: "UPI Payment",
-      description: "UPI payment integration coming soon!",
-    });
-  };
-
   if (items.length === 0) {
     navigate('/cart');
     return null;
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-3xl font-light text-gray-900 mb-4">Please Sign In</h1>
+          <p className="text-gray-600 mb-8">You need to be signed in to proceed with checkout.</p>
+          <Button
+            onClick={() => navigate('/auth')}
+            className="bg-yellow-400 hover:bg-yellow-500 text-black"
+          >
+            Sign In to Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
+      <Header />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-light text-gray-900 mb-8">Checkout</h1>
 
@@ -240,23 +252,7 @@ const Checkout = () => {
                   disabled={loading}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  Pay with Razorpay
-                </Button>
-                <Button
-                  onClick={handleGooglePay}
-                  disabled={loading}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Google Pay
-                </Button>
-                <Button
-                  onClick={handleUPIPayment}
-                  disabled={loading}
-                  variant="outline"
-                  className="w-full"
-                >
-                  UPI Payment
+                  Pay with Razorpay - ₹{totalAmount.toFixed(2)}
                 </Button>
               </div>
             </div>
