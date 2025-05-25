@@ -1,66 +1,54 @@
 
+import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { supabase } from "@/integrations/supabase/client";
 
-const products = [
-  {
-    id: 1,
-    name: "Vitamin C Serum",
-    price: 39.99,
-    originalPrice: 49.99,
-    image: "/placeholder.svg",
-    rating: 4.8,
-    reviews: 156,
-    isNew: true
-  },
-  {
-    id: 2,
-    name: "Hydrating Face Cream",
-    price: 29.99,
-    image: "/placeholder.svg",
-    rating: 4.6,
-    reviews: 98,
-    isNew: false
-  },
-  {
-    id: 3,
-    name: "Gentle Cleanser",
-    price: 24.99,
-    image: "/placeholder.svg",
-    rating: 4.7,
-    reviews: 203,
-    isNew: false
-  },
-  {
-    id: 4,
-    name: "Retinol Night Cream",
-    price: 54.99,
-    originalPrice: 64.99,
-    image: "/placeholder.svg",
-    rating: 4.9,
-    reviews: 89,
-    isNew: true
-  },
-  {
-    id: 5,
-    name: "Hyaluronic Acid Serum",
-    price: 34.99,
-    image: "/placeholder.svg",
-    rating: 4.5,
-    reviews: 142,
-    isNew: false
-  },
-  {
-    id: 6,
-    name: "Exfoliating Scrub",
-    price: 19.99,
-    image: "/placeholder.svg",
-    rating: 4.4,
-    reviews: 76,
-    isNew: false
-  }
-];
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  original_price?: number;
+  image_url: string;
+  rating: number;
+  reviews_count: number;
+  is_new: boolean;
+}
 
 export const ProductGrid = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_featured', true)
+        .limit(6);
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">Loading products...</div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

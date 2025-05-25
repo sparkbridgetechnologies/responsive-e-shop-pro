@@ -1,10 +1,25 @@
 
 import { useState } from "react";
-import { Search, ShoppingBag, User, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
+import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { itemCount } = useCart();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -12,15 +27,20 @@ export const Header = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-light text-gray-900">GlowSkin</h1>
+            <button 
+              onClick={() => navigate('/')}
+              className="text-2xl font-light text-gray-900 hover:text-gray-700"
+            >
+              GlowSkin
+            </button>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-12">
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-light">Home</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-light">Shop</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-light">About</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-light">Contact</a>
+            <button onClick={() => navigate('/')} className="text-gray-600 hover:text-gray-900 font-light">Home</button>
+            <button onClick={() => navigate('/products')} className="text-gray-600 hover:text-gray-900 font-light">Shop</button>
+            <button className="text-gray-600 hover:text-gray-900 font-light">About</button>
+            <button className="text-gray-600 hover:text-gray-900 font-light">Contact</button>
           </nav>
 
           {/* Right side icons */}
@@ -28,14 +48,49 @@ export const Header = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex text-gray-600 hover:text-gray-900">
               <Search className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex text-gray-600 hover:text-gray-900">
-              <User className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="relative text-gray-600 hover:text-gray-900">
+            
+            {user ? (
+              <div className="hidden md:flex items-center space-x-4">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => navigate('/orders')}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleSignOut}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/auth')}
+                className="hidden md:flex text-gray-600 hover:text-gray-900"
+              >
+                <User className="h-5 w-5" />
+              </Button>
+            )}
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/cart')}
+              className="relative text-gray-600 hover:text-gray-900"
+            >
               <ShoppingBag className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                0
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  {itemCount}
+                </span>
+              )}
             </Button>
             
             {/* Mobile menu button */}
@@ -55,10 +110,19 @@ export const Header = () => {
           <div className="md:hidden border-t border-gray-100 py-6">
             <div className="flex flex-col space-y-4">
               <nav className="flex flex-col space-y-4">
-                <a href="#" className="text-gray-600 hover:text-gray-900 font-light py-2">Home</a>
-                <a href="#" className="text-gray-600 hover:text-gray-900 font-light py-2">Shop</a>
-                <a href="#" className="text-gray-600 hover:text-gray-900 font-light py-2">About</a>
-                <a href="#" className="text-gray-600 hover:text-gray-900 font-light py-2">Contact</a>
+                <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Home</button>
+                <button onClick={() => { navigate('/products'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Shop</button>
+                <button className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">About</button>
+                <button className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Contact</button>
+                
+                {user ? (
+                  <>
+                    <button onClick={() => { navigate('/orders'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">My Orders</button>
+                    <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Sign Out</button>
+                  </>
+                ) : (
+                  <button onClick={() => { navigate('/auth'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Sign In</button>
+                )}
               </nav>
             </div>
           </div>
