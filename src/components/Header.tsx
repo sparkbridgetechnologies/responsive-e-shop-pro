@@ -39,8 +39,12 @@ export const Header = () => {
           <nav className="hidden md:flex space-x-12">
             <button onClick={() => navigate('/')} className="text-gray-600 hover:text-gray-900 font-light">Home</button>
             <button onClick={() => navigate('/products')} className="text-gray-600 hover:text-gray-900 font-light">Shop</button>
-            <button className="text-gray-600 hover:text-gray-900 font-light">About</button>
-            <button className="text-gray-600 hover:text-gray-900 font-light">Contact</button>
+            <button onClick={() => navigate('/about')} className="text-gray-600 hover:text-gray-900 font-light">About</button>
+            <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 font-light">Contact</button>
+            <button onClick={() => navigate('/track')} className="text-gray-600 hover:text-gray-900 font-light">Track Order</button>
+            {user?.email === 'admin@glowskin.com' && (
+              <button onClick={() => navigate('/admin')} className="text-yellow-600 hover:text-yellow-700 font-medium">Admin</button>
+            )}
           </nav>
 
           {/* Right side icons */}
@@ -112,12 +116,16 @@ export const Header = () => {
               <nav className="flex flex-col space-y-4">
                 <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Home</button>
                 <button onClick={() => { navigate('/products'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Shop</button>
-                <button className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">About</button>
-                <button className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Contact</button>
+                <button onClick={() => { navigate('/about'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">About</button>
+                <button onClick={() => { navigate('/contact'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Contact</button>
+                <button onClick={() => { navigate('/track'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Track Order</button>
                 
                 {user ? (
                   <>
                     <button onClick={() => { navigate('/orders'); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">My Orders</button>
+                    {user.email === 'admin@glowskin.com' && (
+                      <button onClick={() => { navigate('/admin'); setIsMenuOpen(false); }} className="text-yellow-600 hover:text-yellow-700 font-medium py-2 text-left">Admin Panel</button>
+                    )}
                     <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="text-gray-600 hover:text-gray-900 font-light py-2 text-left">Sign Out</button>
                   </>
                 ) : (
