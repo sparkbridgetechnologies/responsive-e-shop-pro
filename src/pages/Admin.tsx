@@ -11,19 +11,20 @@ import { Package, Users, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { useNavigate } from 'react-router-dom';
 
-interface Order {
+interface OrderWithProfile {
   id: string;
   total_amount: number;
   status: string;
   payment_status: string;
   delivery_status: string;
   created_at: string;
-  profiles: {
-    full_name: string;
-    email: string;
-  };
+  user_id: string;
   tracking_number?: string;
   shiprocket_order_id?: string;
+  profile?: {
+    full_name: string | null;
+    email: string;
+  } | null;
 }
 
 interface Product {
@@ -38,7 +39,7 @@ interface Product {
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderWithProfile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -58,17 +59,34 @@ const Admin = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch orders with user profiles
-      const { data: ordersData } = await supabase
+      // Fetch orders first
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          profiles!orders_user_id_fkey (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
+
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profiles for the orders
+      let ordersWithProfiles: OrderWithProfile[] = [];
+      if (ordersData && ordersData.length > 0) {
+        const userIds = [...new Set(ordersData.map(order => order.user_id))];
+        
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+
+        // Combine orders with profiles
+        ordersWithProfiles = ordersData.map(order => ({
+          ...order,
+          profile: profilesData?.find(profile => profile.id === order.user_id) || null
+        }));
+      }
 
       // Fetch products
       const { data: productsData } = await supabase
@@ -76,17 +94,17 @@ const Admin = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Fetch stats
+      // Fetch total users count
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id');
 
-      if (ordersData) {
-        setOrders(ordersData);
-        const totalRevenue = ordersData.reduce((sum, order) => sum + Number(order.total_amount), 0);
+      if (ordersWithProfiles) {
+        setOrders(ordersWithProfiles);
+        const totalRevenue = ordersWithProfiles.reduce((sum, order) => sum + Number(order.total_amount), 0);
         setStats(prev => ({
           ...prev,
-          totalOrders: ordersData.length,
+          totalOrders: ordersWithProfiles.length,
           totalRevenue
         }));
       }
@@ -234,8 +252,8 @@ const Admin = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{order.profiles?.full_name || 'N/A'}</div>
-                            <div className="text-sm text-gray-500">{order.profiles?.email}</div>
+                            <div className="font-medium">{order.profile?.full_name || 'N/A'}</div>
+                            <div className="text-sm text-gray-500">{order.profile?.email || 'N/A'}</div>
                           </div>
                         </TableCell>
                         <TableCell>₹{Number(order.total_amount).toFixed(2)}</TableCell>
