@@ -1,71 +1,50 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, User, Share2, Heart } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { Newsletter } from '@/components/Newsletter';
-
-const blogPosts = [
-  {
-    id: 1,
-    title: "The Science Behind Vitamin C in Skincare: Revolutionary Breakthrough",
-    excerpt: "Discover how vitamin C transforms your skin at the cellular level and why it's essential for your daily routine. Learn about the latest research and breakthrough formulations.",
-    author: "Dr. Sarah Johnson",
-    date: "March 15, 2024",
-    readTime: "8 min read",
-    image: "https://images.unsplash.com/photo-1570194065650-d99fb4bedf0a?w=800&h=500&fit=crop",
-    category: "Science",
-    content: `
-      <p>Vitamin C is one of the most powerful antioxidants in skincare, known for its ability to brighten skin, stimulate collagen production, and protect against environmental damage. Recent studies have shown that L-ascorbic acid, the most potent form of vitamin C, can penetrate deep into the dermis when properly formulated.</p>
-
-      <h3>Understanding Vitamin C Forms</h3>
-      <p>There are several forms of vitamin C used in skincare, each with unique benefits:</p>
-      <ul>
-        <li><strong>L-Ascorbic Acid:</strong> The most potent and well-researched form</li>
-        <li><strong>Magnesium Ascorbyl Phosphate:</strong> More stable, suitable for sensitive skin</li>
-        <li><strong>Sodium Ascorbyl Phosphate:</strong> Gentle with antimicrobial properties</li>
-        <li><strong>Ascorbyl Glucoside:</strong> Stable and gradually releases vitamin C</li>
-      </ul>
-
-      <h3>The Science of Absorption</h3>
-      <p>The key to vitamin C efficacy lies in proper formulation. The pH level must be below 4 for L-ascorbic acid to remain stable and penetrate the skin effectively. Our research shows that combining vitamin C with vitamin E and ferulic acid creates a synergistic effect that enhances stability and absorption by up to 8 times.</p>
-
-      <h3>Optimal Concentration and Usage</h3>
-      <p>Clinical studies demonstrate that concentrations between 10-20% provide maximum benefits without irritation for most skin types. Start with lower concentrations and gradually increase as your skin builds tolerance. Apply vitamin C serum in the morning for maximum antioxidant protection throughout the day.</p>
-
-      <h3>Expected Results and Timeline</h3>
-      <p>With consistent use, you can expect to see:</p>
-      <ul>
-        <li>Improved skin brightness within 2-4 weeks</li>
-        <li>Reduced appearance of dark spots in 6-8 weeks</li>
-        <li>Enhanced skin firmness and reduced fine lines in 8-12 weeks</li>
-        <li>Overall skin texture improvement in 3-6 months</li>
-      </ul>
-
-      <blockquote>
-        "Vitamin C is not just a trend - it's a scientifically proven powerhouse ingredient that should be a cornerstone of any effective skincare routine." - Dr. Sarah Johnson
-      </blockquote>
-
-      <p>Remember to always use sunscreen when incorporating vitamin C into your routine, as it can make your skin more photosensitive initially. The long-term benefits of consistent vitamin C use include stronger, more resilient skin that's better equipped to handle environmental stressors.</p>
-    `
-  },
-  // Add more blog posts here with full content...
-];
+import { useBlogs } from '@/hooks/useBlogs';
 
 const BlogDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const blogPost = blogPosts.find(post => post.id === parseInt(id || '1'));
+  const { getBlogById, loading } = useBlogs();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-20">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded mb-4 w-3/4"></div>
+            <div className="h-64 bg-gray-200 rounded mb-6"></div>
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
-  if (!blogPost) {
+  const blog = getBlogById(id || '');
+
+  if (!blog) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-light text-gray-900 mb-4">Blog post not found</h1>
-          <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
-            Return Home
+          <h1 className="text-3xl font-light text-gray-900 mb-4">Blog Post Not Found</h1>
+          <p className="text-gray-600 mb-8">The blog post you're looking for doesn't exist.</p>
+          <Button
+            onClick={() => navigate('/')}
+            className="bg-yellow-400 hover:bg-yellow-500 text-black"
+          >
+            Back to Home
           </Button>
         </div>
         <Footer />
@@ -77,112 +56,88 @@ const BlogDetail = () => {
     <div className="min-h-screen bg-white">
       <Header />
       
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="aspect-[21/9] bg-gradient-to-r from-black/50 to-transparent">
-          <img
-            src={blogPost.image}
-            alt={blogPost.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-        </div>
-        
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="max-w-4xl mx-auto">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/')}
-              className="text-white hover:text-yellow-400 mb-6"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-            
-            <div className="space-y-4">
-              <span className="inline-block bg-yellow-400 text-black px-4 py-2 rounded-full text-sm font-medium uppercase tracking-wider">
-                {blogPost.category}
-              </span>
-              
-              <h1 className="text-4xl md:text-5xl font-light text-white leading-tight">
-                {blogPost.title}
-              </h1>
-              
-              <div className="flex items-center space-x-6 text-white/90">
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4" />
-                  <span className="font-light">{blogPost.author}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="font-light">{blogPost.date}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4" />
-                  <span className="font-light">{blogPost.readTime}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-8 hover:bg-gray-100"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-          <div className="lg:col-span-3">
-            <div className="prose prose-lg max-w-none">
-              <p className="text-xl text-gray-600 font-light leading-relaxed mb-8">
-                {blogPost.excerpt}
-              </p>
-              
-              <div 
-                className="blog-content"
-                dangerouslySetInnerHTML={{ __html: blogPost.content }}
-                style={{
-                  lineHeight: '1.8',
-                  fontSize: '16px'
-                }}
-              />
+        <div className="mb-8">
+          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+            <span className="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full font-medium">
+              {blog.category}
+            </span>
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              {new Date(blog.published_date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              5 min read
             </div>
           </div>
           
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-8">
-              <div className="bg-gray-50 rounded-2xl p-6">
-                <h3 className="font-medium text-gray-900 mb-4">Share this article</h3>
-                <div className="flex space-x-3">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Share2 className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6">
-                <h3 className="font-medium text-gray-900 mb-4">About the Author</h3>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{blogPost.author}</p>
-                    <p className="text-sm text-gray-600">Skincare Expert</p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 font-light">
-                  A board-certified dermatologist with over 15 years of experience in cosmetic and medical dermatology.
-                </p>
-              </div>
+          <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-6 leading-tight">
+            {blog.title}
+          </h1>
+          
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">{blog.author}</p>
+              <p className="text-sm text-gray-500">Skincare Expert</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <Newsletter />
+        <div className="relative mb-12 rounded-2xl overflow-hidden">
+          <img
+            src={blog.image_url}
+            alt={blog.title}
+            className="w-full h-64 md:h-96 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        </div>
+
+        <div className="prose prose-lg max-w-none">
+          <div className="text-xl text-gray-600 font-light mb-8 leading-relaxed">
+            {blog.excerpt}
+          </div>
+          
+          <div 
+            className="blog-content text-gray-700 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: blog.content }}
+          />
+        </div>
+
+        <div className="mt-16 pt-8 border-t border-gray-200">
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-light text-gray-900 mb-4">
+              Ready to Transform Your Skin?
+            </h3>
+            <p className="text-gray-600 mb-6 font-light">
+              Discover our curated collection of premium skincare products designed to give you the radiant, healthy skin you deserve.
+            </p>
+            <Button
+              onClick={() => navigate('/products')}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-3 text-lg"
+            >
+              Shop Products
+            </Button>
+          </div>
+        </div>
+      </article>
+
       <Footer />
     </div>
   );

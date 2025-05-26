@@ -3,120 +3,34 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  original_price?: number;
-  image_url: string;
-  category: string;
-  concern: string;
-  rating: number;
-  reviews_count: number;
-  stock_quantity: number;
-  is_new: boolean;
-}
+import { useProducts } from '@/hooks/useProducts';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
+  const { products, loading } = useProducts();
+  const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (id) {
-      fetchProduct();
-      if (user) {
-        checkWishlist();
-      }
+    if (products && id) {
+      const foundProduct = products.find(p => p.id === id);
+      setProduct(foundProduct);
     }
-  }, [id, user]);
-
-  const fetchProduct = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      setProduct(data);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      toast({
-        title: "Error",
-        description: "Product not found.",
-        variant: "destructive",
-      });
-      navigate('/');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkWishlist = async () => {
-    if (!user || !id) return;
-
-    try {
-      const { data } = await supabase
-        .from('wishlist')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('product_id', id)
-        .single();
-
-      setIsWishlisted(!!data);
-    } catch (error) {
-      // Item not in wishlist
-    }
-  };
-
-  const toggleWishlist = async () => {
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to be signed in to add items to wishlist.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      if (isWishlisted) {
-        await supabase
-          .from('wishlist')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('product_id', id);
-        setIsWishlisted(false);
-        toast({ title: "Removed from wishlist" });
-      } else {
-        await supabase
-          .from('wishlist')
-          .insert({ user_id: user.id, product_id: id });
-        setIsWishlisted(true);
-        toast({ title: "Added to wishlist" });
-      }
-    } catch (error) {
-      console.error('Error updating wishlist:', error);
-    }
-  };
+  }, [products, id]);
 
   const handleAddToCart = async () => {
     if (product) {
-      await addToCart(product.id, quantity);
+      await addToCart(product.id, quantity, product);
     }
   };
 
@@ -135,22 +49,49 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="max-w-6xl mx-auto px-4 py-20">
+          <div className="animate-pulse">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="aspect-square bg-gray-200 rounded-lg"></div>
+              <div className="space-y-6">
+                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">Product not found</div>
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="max-w-6xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-3xl font-light text-gray-900 mb-4">Product Not Found</h1>
+          <p className="text-gray-600 mb-8">The product you're looking for doesn't exist.</p>
+          <Button
+            onClick={() => navigate('/products')}
+            className="bg-yellow-400 hover:bg-yellow-500 text-black"
+          >
+            Browse Products
+          </Button>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-white">
+      <Header />
+      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button
           variant="ghost"
@@ -165,9 +106,9 @@ const ProductDetail = () => {
           {/* Product Image */}
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={`https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&h=600&fit=crop`}
+              src={product.image_url}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
             />
           </div>
 
@@ -212,9 +153,11 @@ const ProductDetail = () => {
               <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
                 {product.category}
               </span>
-              <span className="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-sm">
-                {product.concern}
-              </span>
+              {product.concern && (
+                <span className="bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-sm">
+                  {product.concern}
+                </span>
+              )}
             </div>
 
             {/* Quantity Selector */}
@@ -250,7 +193,7 @@ const ProductDetail = () => {
             <div className="flex gap-4">
               <Button
                 onClick={handleAddToCart}
-                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black"
+                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black hover:scale-105 transition-all duration-300"
                 disabled={product.stock_quantity === 0}
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
@@ -259,13 +202,9 @@ const ProductDetail = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={toggleWishlist}
+                className="hover:scale-105 transition-transform duration-300"
               >
-                <Heart
-                  className={`h-4 w-4 ${
-                    isWishlisted ? "fill-red-500 text-red-500" : ""
-                  }`}
-                />
+                <Heart className="h-4 w-4" />
               </Button>
             </div>
 
@@ -275,6 +214,8 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };

@@ -3,27 +3,13 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ProductCard } from '@/components/ProductCard';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  original_price?: number;
-  image_url: string;
-  rating: number;
-  reviews_count: number;
-  is_new: boolean;
-  category: string;
-  concern?: string;
-}
+import { useProducts } from '@/hooks/useProducts';
 
 const Products = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { products, loading } = useProducts();
+  const [filteredProducts, setFilteredProducts] = useState(products);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedConcern, setSelectedConcern] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
@@ -32,27 +18,12 @@ const Products = () => {
   const concerns = ['all', 'Anti-Aging', 'Hydration', 'Brightening', 'Acne Care', 'Sensitive Skin', 'Sun Protection'];
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    setFilteredProducts(products);
+  }, [products]);
 
   useEffect(() => {
     filterAndSortProducts();
   }, [products, selectedCategory, selectedConcern, sortBy]);
-
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*');
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterAndSortProducts = () => {
     let filtered = [...products];
@@ -91,7 +62,20 @@ const Products = () => {
       <div className="min-h-screen bg-white">
         <Header />
         <div className="max-w-6xl mx-auto px-4 py-20">
-          <div className="text-center">Loading products...</div>
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-6">
+              Loading Products...
+            </h1>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 rounded-lg h-64 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
         </div>
         <Footer />
       </div>
