@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { mockProducts } from '@/data/mockData';
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   description?: string;
   price: number;
   original_price?: number;
-  image_url?: string;
+  image_url: string;
   category: string;
   concern?: string;
   rating: number;

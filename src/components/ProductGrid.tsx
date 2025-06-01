@@ -1,6 +1,6 @@
 
 import { ProductCard } from "./ProductCard";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, type Product } from "@/hooks/useProducts";
 
 export const ProductGrid = () => {
   const { products, loading } = useProducts();
